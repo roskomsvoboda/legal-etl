@@ -1,0 +1,5 @@
+node_modules
+.vscode
+ScriptETL
+yarn-error.log
+.git

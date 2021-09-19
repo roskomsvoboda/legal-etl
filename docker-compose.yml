@@ -1,0 +1,94 @@
+version: '3.8'  
+
+services:
+    postgresql:
+        image: postgres:latest
+        container_name: postgresql
+        shm_size: 1g
+        restart: always
+        environment: 
+            - POSTGRES_DB=database_test
+            - POSTGRES_USER=database_test
+            - POSTGRES_PASSWORD=database_test
+        ports:
+            - 3432:5432
+        networks:
+            - etl_net
+
+    # mysql:
+    #     image: mysql:latest
+    #     container_name: mysql
+    #     restart: always
+    #     environment:
+    #         - MYSQL_ROOT_PASSWORD=database_test
+    #         - MYSQL_DATABASE=database_test
+    #         - MYSQL_USER=database_test
+    #         - MYSQL_PASSWORD=database_test
+    #     ports:
+    #         - 3307:3307
+    #     networks:
+    #         - etl_net
+
+    # mariadb:
+    #     image: mariadb:latest
+    #     container_name: mariadb
+    #     restart: always
+    #     environment:
+    #         - MYSQL_ROOT_PASSWORD=database_test
+    #         - MYSQL_DATABASE=database_test
+    #         - MYSQL_USER=database_test
+    #         - MYSQL_PASSWORD=database_test
+    #     ports:
+    #         - 3307:3307
+    #     networks:
+    #         - etl_net
+
+    # sqlite3:
+    #     image: sqlite3:latest
+    #     container_name: keinos/sqlite3:latest
+    #     restart: always
+    #     networks:
+    #         - etl_net
+
+    # mssql-express:
+    #     image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+    #     container_name: mssql-express
+    #     restart: always
+    #     environment:
+    #         - ACCEPT_EULA=Y
+    #         - MSSQL_PID=Express
+    #         - SA_PASSWORD=database_test
+    #     ports:
+    #         - 1433:1433
+    #     networks:
+    #         - etl_net
+
+    legal-etl: 
+        container_name: legal-etl
+        depends_on:
+            - postgresql
+            # - mysql
+            # - mariadb
+            # - sqlite3
+            # - mssql-express
+        tty: true
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        restart: always 
+        environment:
+            - POSTGRES_STR=postgresql://database_test:database_test@postgresql:5432/database_test
+        volumes:
+            - ./ScriptETL/1-extract:/usr/src/app/src/ETL/1-extract
+            - ./ScriptETL/2-transform:/usr/src/app/src/ETL/2-transform
+            - ./ScriptETL/3-load:/usr/src/app/src/ETL/3-load
+            - ./ScriptETL/export-file:/usr/src/app/src/storage/export-file
+        ports:
+            - 3011:3010
+        networks:
+            - etl_net
+        command: yarn start
+
+networks:
+     etl_net:
+          driver: bridge
